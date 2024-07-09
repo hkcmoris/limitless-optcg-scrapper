@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "_dg"
+version = "0.0.1"
+authors = [{name = "Ondřej Moravec", email = "moravec@devground.cz"}]
+description = ""
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+]
+
+[project.urls]
+"Homepage" = "https://github.com/hkcmoris/{PROJECT_NAME}"
+"Bugtracker" = "https://github.com/hkcmoris/{PROJECT_NAME}/issues"
