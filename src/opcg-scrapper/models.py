@@ -135,7 +135,7 @@ class OPCG_Card:
             'type': self.type,
             'name': self.name,
             'image_src': self.image_src,
-            'cost': self.cost,
+            'life' if self.type == "Leader" else 'cost': self.cost,
             'attribute': self.attribute,
             'power': self.power,
             'counter': self.counter,
@@ -146,7 +146,6 @@ class OPCG_Card:
             'card_sets': self.card_sets
         }
         card_dict = { self.id: card_data }
-        json_output = json.dumps(card_dict, indent=4, ensure_ascii=False)
         return card_dict
 
 class OPCG_Set:
@@ -190,6 +189,8 @@ class OPCG_Set:
         """
         self.id = id
         self.code = code
+        if ('-' in code):
+            self.code = code.split('-')[0] + code.split('-')[1]
         self.name = name
         self.series = series
         self.cards = []
@@ -230,17 +231,16 @@ class OPCG_Set:
     
     def toJSON(self):
         # cards_data = [json.loads(opcg_card.toJSON()) for opcg_card in self.cards]
-        cards_data = { card_id: card_data for card in self.cards for card_id, card_data in card.toJSON().items() }
+        # cards_data = { card_id: card_data for card in self.cards for card_id, card_data in card.toJSON().items() }
         set_data = {
             'id': self.id,
             'code': self.code,
             'name': self.name,
             'series': self.series,
-            'cards': cards_data,
+            'cards': self.cards,
             'image': self.image
         }
         set_dict = { self.id: set_data }
-        json_output = json.dumps(set_dict, indent=4, ensure_ascii=False)
         return set_dict
     
 class OPCG_Collection:
@@ -256,6 +256,7 @@ class OPCG_Collection:
         Constructs all the necessary attributes for the collection object.
         """
         self.sets = []
+        self.cards = []
 
     def AddSet(self, set):
         """
@@ -267,6 +268,17 @@ class OPCG_Collection:
             the set to add to the collection
         """
         self.sets.append(set)
+
+    def AddCard(self, card):
+        """
+        Adds a card to the collection.
+
+        Parameters
+        ----------
+        card : OPCG_Card
+            the card to add to the collection
+        """
+        self.cards.append(card)
 
     def __str__(self):
         """
@@ -293,8 +305,10 @@ class OPCG_Collection:
     def toJSON(self):
         # sets_data = [json.loads(opcg_set.toJSON()) for opcg_set in self.sets]
         sets_data = { set_id: set_data for opcg_set in self.sets for set_id, set_data in opcg_set.toJSON().items() }
+        cards_data = { card_id: card_data for card in self.cards for card_id, card_data in card.toJSON().items() }
         collection_data = {
-            'sets': sets_data
+            'sets': sets_data,
+            'cards': cards_data
         }
         json_output = json.dumps(collection_data, indent=4, ensure_ascii=False)
         return json_output
