@@ -1,5 +1,5 @@
 import json
-
+import re
 
 class OPCG_Card:
     """
@@ -37,6 +37,8 @@ class OPCG_Card:
         the card's effect
     card_sets : str
         the card's card sets
+    keywords : [str]
+        the card's keywords
     """
 
     def __init__(self):
@@ -57,7 +59,8 @@ class OPCG_Card:
         self.colorShort = ""
         self.feature = ""
         self.effect = ""
-        self.card_sets = ""
+        self.card_sets = {'id': "", 'name': ""}
+        self.keywords = []
 
     def parse_card_data(self, dl_tag):
         self.id = dl_tag.get('id')
@@ -103,7 +106,30 @@ class OPCG_Card:
         if ("/" in self.feature):
             self.feature = self.feature.split("/")
         self.effect = effect_info
-        self.card_sets = card_set_info
+        self.card_sets['id'] = 'None'
+        self.card_sets['name'] = card_set_info
+        # Regular expression to find text within square brackets and curly brackets
+        pattern = r'\[(.*?)\]|\{(.*?)\}|DON!! −(\d+)'
+
+        # Find all occurrences of text within square brackets
+        matches = re.findall(pattern, self.effect)
+
+        # Add each match to the keywords list
+        for match in matches:
+            # match is a tuple, where at most one group will be non-None
+            if match[0]:  # This is for square brackets
+                keyword = match[0].strip()
+                if keyword not in self.keywords:
+                    self.keywords.append(keyword)
+            elif match[1]:  # This is for curly brackets
+                keyword = match[1].strip()
+                if keyword not in self.keywords:
+                    self.keywords.append(keyword)
+            elif match[2]:  # This is for "DON!! -x"
+                don_value = match[2]
+                keyword = f"DON!! -{don_value}"
+                if keyword not in self.keywords:
+                    self.keywords.append(keyword)
 
     def __str__(self):
         """
@@ -143,7 +169,8 @@ class OPCG_Card:
             'colorShort': self.colorShort,
             'feature': self.feature,
             'effect': self.effect,
-            'card_sets': self.card_sets
+            'card_sets': self.card_sets,
+            'keywords': self.keywords
         }
         card_dict = { self.id: card_data }
         return card_dict

@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import mechanicalsoup
 from models import OPCG_Card, OPCG_Collection, OPCG_Set
@@ -52,6 +53,7 @@ def run():
         collection.AddSet(opcg_set)
 
     for opcg_set in collection.sets:
+        print(f"Processing {opcg_set.name} ({opcg_set.series})")
         if opcg_set.series == "STARTER DECK" or opcg_set.series == "ULTRA DECK": series = 'decks'
         elif opcg_set.series == "BOOSTER PACK" or opcg_set.series == "EXTRA BOOSTER": series = 'boosters'
         else: series = 'other'
@@ -63,21 +65,39 @@ def run():
             opcg_set.image = 'https://en.onepiece-cardgame.com/products/boosters/op05/images/mv_chara.png'
         else:
             imageUrl = f'https://en.onepiece-cardgame.com/products/{series}/{code}.php'
-            browser.open(imageUrl)
+            response = browser.open(imageUrl)
+            if response.status_code != 200:
+            # if browser.get_current_page() is None or browser.get_current_page().text == "File not found":
+                print(f"Warning: No image found for set {opcg_set.series} {opcg_set.name}")
+                continue
             image = browser.get_current_page().find("main", class_="mainCol").find("div", class_="productsSlider").find("ul", class_="productsMainSlider").find("li").find("p").find("img")
             opcg_set.image = image.get('src').replace("../..", "https://en.onepiece-cardgame.com")
         browser.open(seriesUrl + opcg_set.id)
         set_data = browser.get_current_page().find("div", class_="resultCol").find_all("dl", class_="modalCol")
+        total_cards = len(set_data)
+        index = 0
         for set in set_data:
+            index += 1
+            print(f"\rProcessing card {index}/{total_cards}", end='', flush=True)
             card = OPCG_Card()
             card.parse_card_data(set)
+            card.card_sets['id'] = opcg_set.id
             opcg_set.AddCard(card.id)
             collection.AddCard(card)
-    # https://en.onepiece-cardgame.com/images/products/decks/st01-04/mv_01.jpg?v3
+        print("\n")
+    
+    version = 'v2'
+    file_path = f'limitless-optcg-scrapper/src/collection.{version}.json'
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        # If the file does not exist, log a message or perform other actions, and create the file
+        print(f"{file_path} does not exist, will be created.")
+
+
     # Save to collection.json
-    with open('collection.json', 'w', encoding='utf-8') as file:
+    with open(file_path, 'w', encoding='utf-8') as file:
         file.write(collection.toJSON())
-        print('Collection saved to collection.json')
+        print(f'Collection saved to {file_path}')
 
 
 if __name__ == '__main__':
