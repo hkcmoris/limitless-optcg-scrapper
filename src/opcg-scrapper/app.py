@@ -66,12 +66,12 @@ def run():
         else:
             imageUrl = f'https://en.onepiece-cardgame.com/products/{series}/{code}.php'
             response = browser.open(imageUrl)
-            if response.status_code != 200:
+            if response.status_code == 200:
             # if browser.get_current_page() is None or browser.get_current_page().text == "File not found":
+                image = browser.get_current_page().find("main", class_="mainCol").find("div", class_="productsSlider").find("ul", class_="productsMainSlider").find("li").find("p").find("img")
+                opcg_set.image = image.get('src').replace("../..", "https://en.onepiece-cardgame.com")
+            else:
                 print(f"Warning: No image found for set {opcg_set.series} {opcg_set.name}")
-                continue
-            image = browser.get_current_page().find("main", class_="mainCol").find("div", class_="productsSlider").find("ul", class_="productsMainSlider").find("li").find("p").find("img")
-            opcg_set.image = image.get('src').replace("../..", "https://en.onepiece-cardgame.com")
         browser.open(seriesUrl + opcg_set.id)
         set_data = browser.get_current_page().find("div", class_="resultCol").find_all("dl", class_="modalCol")
         total_cards = len(set_data)
@@ -86,7 +86,7 @@ def run():
             collection.AddCard(card)
         print("\n")
     
-    version = 'v2'
+    version = 'v3'
     file_path = f'limitless-optcg-scrapper/src/collection.{version}.json'
     # Check if the file exists
     if not os.path.exists(file_path):
